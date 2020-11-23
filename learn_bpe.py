@@ -172,7 +172,7 @@ def learn_bpe(infile_names, outfile_name, num_symbols, min_frequency=2, verbose=
     #vocab = get_vocabulary(infile, is_dict)
     vocab = Counter()
     for f in infile_names:
-        sys.stderr.write(f'Collecting vocab from {f}\n')
+        sys.stderr.write('Collecting vocab from {}\n'.format(f))
         vocab = update_vocabulary(vocab, f, is_dict)
 
     vocab = dict([(tuple(x[:-1])+(x[-1]+'</w>',) ,y) for (x,y) in vocab.items()])
@@ -194,7 +194,7 @@ def learn_bpe(infile_names, outfile_name, num_symbols, min_frequency=2, verbose=
         num_symbols -= len(uniq_char_internal) + len(uniq_char_final)
 
 
-    sys.stderr.write(f'Write vocab file to {outfile_name}')
+    sys.stderr.write('Write vocab file to {}'.format(outfile_name))
     with codecs.open(outfile_name, 'w', encoding='utf-8') as outfile:
         # version 0.2 changes the handling of the end-of-word token ('</w>');
         # version numbering allows bckward compatibility
@@ -216,7 +216,7 @@ def learn_bpe(infile_names, outfile_name, num_symbols, min_frequency=2, verbose=
                 prune_stats(stats, big_stats, threshold)
 
             if stats[most_frequent] < min_frequency:
-                sys.stderr.write(f'no pair has frequency >= {min_frequency}. Stopping\n')
+                sys.stderr.write('no pair has frequency >= {min_frequency}. Stopping\n'.format(min_frequency))
                 break
 
             if verbose:

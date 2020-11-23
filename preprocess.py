@@ -3,6 +3,7 @@ import os
 import argparse
 import logging
 import dill as pickle
+import pickle
 import urllib
 from tqdm import tqdm
 import sys
@@ -65,12 +66,12 @@ def download_and_extract(download_dir, url, src_filename, trg_filename):
     trg_path = file_exist(download_dir, trg_filename)
 
     if src_path and trg_path:
-        sys.stderr.write(f"Already downloaded and extracted {url}.\n")
+        sys.stderr.write("Already downloaded and extracted {}.\n".format(url))
         return src_path, trg_path
 
     compressed_file = _download_file(download_dir, url)
 
-    sys.stderr.write(f"Extracting {compressed_file}.\n")
+    sys.stderr.write("Extracting {}.\n".format(compressed_file))
     with tarfile.open(compressed_file, "r:gz") as corpus_tar:
         corpus_tar.extractall(download_dir)
 
@@ -80,15 +81,15 @@ def download_and_extract(download_dir, url, src_filename, trg_filename):
     if src_path and trg_path:
         return src_path, trg_path
 
-    raise OSError(f"Download/extraction failed for url {url} to path {download_dir}")
+    raise OSError("Download/extraction failed for url {} to path {}".format(url,download_dir))
 
 
 def _download_file(download_dir, url):
     filename = url.split("/")[-1]
     if file_exist(download_dir, filename):
-        sys.stderr.write(f"Already downloaded: {url} (at {filename}).\n")
+        sys.stderr.write("Already downloaded: {} (at {}).\n".format(url,filename))
     else:
-        sys.stderr.write(f"Downloading from {url} to {filename}.\n")
+        sys.stderr.write("Downloading from {} to {}.\n".format(url,filename))
         with TqdmUpTo(unit='B', unit_scale=True, miniters=1, desc=filename) as t:
             urllib.request.urlretrieve(url, filename=filename, reporthook=t.update_to)
     return filename
@@ -109,20 +110,19 @@ def mkdir_if_needed(dir_name):
 
 
 def compile_files(raw_dir, raw_files, prefix):
-    src_fpath = os.path.join(raw_dir, f"raw-{prefix}.src")
-    trg_fpath = os.path.join(raw_dir, f"raw-{prefix}.trg")
+    src_fpath = os.path.join(raw_dir, "raw-{}.src".format(prefix))
+    trg_fpath = os.path.join(raw_dir, "raw-{}.trg".format(prefix))
 
     if os.path.isfile(src_fpath) and os.path.isfile(trg_fpath):
-        sys.stderr.write(f"Merged files found, skip the merging process.\n")
+        sys.stderr.write("Merged files found, skip the merging process.\n")
         return src_fpath, trg_fpath
 
-    sys.stderr.write(f"Merge files into two files: {src_fpath} and {trg_fpath}.\n")
+    sys.stderr.write("Merge files into two files: {} and {}.\n".format(src_fpath,trg_fpath))
 
     with open(src_fpath, 'w') as src_outf, open(trg_fpath, 'w') as trg_outf:
         for src_inf, trg_inf in zip(raw_files['src'], raw_files['trg']):
-            sys.stderr.write(f'  Input files: \n'\
-                    f'    - SRC: {src_inf}, and\n' \
-                    f'    - TRG: {trg_inf}.\n')
+
+            sys.stderr.write("  Input files: \n\t- SRC: {}, and\n\t- TRG: {}.\n".format(trg_inf,src_inf))
             with open(src_inf, newline='\n') as src_inf, open(trg_inf, newline='\n') as trg_inf:
                 cntr = 0
                 for i, line in enumerate(src_inf):
@@ -136,9 +136,8 @@ def compile_files(raw_dir, raw_files, prefix):
 
 
 def encode_file(bpe, in_file, out_file):
-    sys.stderr.write(f"Read raw content from {in_file} and \n"\
-            f"Write encoded content to {out_file}\n")
-    
+    sys.stderr.write("Read raw content from {} and \nWrite encoded content to {}\n".format(in_file,out_file))
+
     with codecs.open(in_file, encoding='utf-8') as in_f:
         with codecs.open(out_file, 'w', encoding='utf-8') as out_f:
             for line in in_f:
@@ -146,11 +145,11 @@ def encode_file(bpe, in_file, out_file):
 
 
 def encode_files(bpe, src_in_file, trg_in_file, data_dir, prefix):
-    src_out_file = os.path.join(data_dir, f"{prefix}.src")
-    trg_out_file = os.path.join(data_dir, f"{prefix}.trg")
+    src_out_file = os.path.join(data_dir, prefix ,".src")
+    trg_out_file = os.path.join(data_dir, prefix ,".trg")
 
     if os.path.isfile(src_out_file) and os.path.isfile(trg_out_file):
-        sys.stderr.write(f"Encoded files found, skip the encoding process ...\n")
+        sys.stderr.write("Encoded files found, skip the encoding process ...\n")
 
     encode_file(bpe, src_in_file, src_out_file)
     encode_file(bpe, trg_in_file, trg_out_file)
@@ -194,19 +193,20 @@ def main():
     # Build up the code from training files if not exist
     opt.codes = os.path.join(opt.data_dir, opt.codes)
     if not os.path.isfile(opt.codes):
-        sys.stderr.write(f"Collect codes from training data and save to {opt.codes}.\n")
+        #sys.stderr.write(f"Collect codes from training data and save to {opt.codes}.\n")
+        sys.stderr.write("Collect codes from training data and save to {}.\n".format(opt.codes))
         learn_bpe(raw_train['src'] + raw_train['trg'], opt.codes, opt.symbols, opt.min_frequency, True)
-    sys.stderr.write(f"BPE codes prepared.\n")
+    sys.stderr.write("BPE codes prepared.\n")
 
-    sys.stderr.write(f"Build up the tokenizer.\n")
+    sys.stderr.write("Build up the tokenizer.\n")
     with codecs.open(opt.codes, encoding='utf-8') as codes: 
         bpe = BPE(codes, separator=opt.separator)
 
-    sys.stderr.write(f"Encoding ...\n")
+    sys.stderr.write("Encoding ...\n")
     encode_files(bpe, train_src, train_trg, opt.data_dir, opt.prefix + '-train')
     encode_files(bpe, val_src, val_trg, opt.data_dir, opt.prefix + '-val')
     encode_files(bpe, test_src, test_trg, opt.data_dir, opt.prefix + '-test')
-    sys.stderr.write(f"Done.\n")
+    sys.stderr.write("Done.\n")
 
 
     field = torchtext.data.Field(
