@@ -3,7 +3,7 @@ import os
 import argparse
 import logging
 import dill as pickle
-import pickle
+#import pickle
 import urllib
 from tqdm import tqdm
 import sys
