@@ -61,14 +61,15 @@ def main():
     source = ColumnDataSource(data=bokeh_data)
       
     p3 = figure(plot_width=800, plot_height=500,   x_axis_label='Epoch(s)',y_axis_label=target_field)
-    p3.line(x='x', y='y1', source=source, color='red', legend='train ', name='train' , line_width=5)
-    p3.line(x='x', y='y2', source=source, color='blue', legend='valid ', name='valid', line_width=5)
+    p1 = p3.line(x='x', y='y1', source=source, color='red', legend='train ', name='train' , line_width=5)
+    p2 = p3.line(x='x', y='y2', source=source, color='blue', legend='valid ', name='valid', line_width=5)
+    p3.add_tools(HoverTool(renderers=[p1], tooltips=[('dataset', '$name'), ('Epoch', '$x{0,0}'), (target_field, '@y1{0.00}')],mode='vline'))
+    p3.add_tools(HoverTool(renderers=[p2], tooltips=[('dataset', '$name'), ('Epoch', '$x{0,0}'), (target_field, '@y2{0.00}')],mode='vline'))
+
     p3.legend.location = "top_left"
     p3.legend.click_policy="hide"
-    
-    p3.add_tools(HoverTool(tooltips=[('dataset', '$name'),
-                                                                            ('Epoch', '$x'),
-                                                                            (target_field, '$y')]))
+    p3.legend.label_text_font_size = "15pt"
+        
     show(p3)
 
 
